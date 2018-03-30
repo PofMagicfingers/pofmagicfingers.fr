@@ -17,12 +17,19 @@ module.exports = {
     }
   },
   plugins: [
+    "gatsby-plugin-sass",
     "gatsby-plugin-react-helmet",
     {
       resolve: "gatsby-source-filesystem",
       options: {
         name: "posts",
         path: `${__dirname}/content/${config.blogPostDir}`
+      }
+    },
+    {
+      resolve: "gatsby-source-youtube",
+      options: {
+        channelId: config.youtubeChannelId
       }
     },
     {

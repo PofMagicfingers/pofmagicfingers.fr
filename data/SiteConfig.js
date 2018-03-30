@@ -1,41 +1,44 @@
 module.exports = {
-  blogPostDir: "sample-posts", // The name of directory that contains your posts.
-  siteTitle: "Gatsby Advanced Starter", // Site title.
-  siteTitleAlt: "GatsbyJS Advanced Starter", // Alternative site title for SEO.
+  blogPostDir: "blog", // The name of directory that contains your posts.
+  youtubeUsername: "PofMagicfingers",
+  youtubeChannelId: "UCJpXhQlrx8c1ObNYd5KIZRg",
+  siteTitle: "Pof Magicfingers", // Site title.
+  siteTitleAlt: "Le bordel de Pof Magicfingers", // Alternative site title for SEO.
   siteLogo: "/logos/logo-1024.png", // Logo used for SEO and manifest.
-  siteUrl: "https://vagr9k.github.io", // Domain of your website without pathPrefix.
-  pathPrefix: "/gatsby-advanced-starter", // Prefixes all links. For cases when deployed to example.github.io/gatsby-advanced-starter/.
-  siteDescription: "A GatsbyJS stater with Advanced design in mind.", // Website description used for RSS feeds/meta description tag.
+  siteUrl: "https://pofmagicfingers.fr", // Domain of your website without pathPrefix.
+  pathPrefix: "/", // Prefixes all links. For cases when deployed to example.github.io/gatsby-advanced-starter/.
+  siteDescription: "Le bordel de Pof Magicfingers", // Website description used for RSS feeds/meta description tag.
   siteRss: "/rss.xml", // Path to the RSS file.
-  siteFBAppID: "1825356251115265", // FB Application ID for using app insights
-  googleAnalyticsID: "UA-47311644-5", // GA tracking ID.
-  disqusShortname: "https-vagr9k-github-io-gatsby-advanced-starter", // Disqus shortname.
-  postDefaultCategoryID: "Tech", // Default category for posts.
-  userName: "Advanced User", // Username to display in the author segment.
-  userTwitter: "", // Optionally renders "Follow Me" in the UserInfo segment.
-  userLocation: "North Pole, Earth", // User location to display in the author segment.
-  userAvatar: "https://api.adorable.io/avatars/150/test.png", // User avatar to display in the author segment.
+  siteFBAppID: "188556681931474", // FB Application ID for using app insights
+  googleAnalyticsID: "UA-35721571-1", // GA tracking ID.
+  disqusShortname: "pofmagicfingers", // Disqus shortname.
+  postDefaultCategoryID: "Blog", // Default category for posts.
+  userName: "PofMagicfingers", // Username to display in the author segment.
+  userTwitter: "PofMagicfingers", // Optionally renders "Follow Me" in the UserInfo segment.
+  userLocation: "Toulouse, France", // User location to display in the author segment.
+  userAvatar:
+    "https://gravatar.com/avatar/b9d8c763961a4168fb49f9dc0f214802?s=200", // User avatar to display in the author segment.
   userDescription:
-    "Yeah, I like animals better than people sometimes... Especially dogs. Dogs are the best. Every time you come home, they act like they haven't seen you in a year. And the good thing about dogs... is they got different dogs for different people.", // User description to display in the author segment.
+    "Classé inutile au patrimoine mondial de l'UNESCO depuis 1992. Fondateur de podradio.fr, podCloud, PodShows - Développeur @ commit42, Podcasteur, Youtuber.", // User description to display in the author segment.
   // Links to social profiles/projects you want to display in the author segment/navigation bar.
   userLinks: [
     {
       label: "GitHub",
-      url: "https://github.com/Vagr9K/gatsby-advanced-starter",
+      url: "https://github.com/pofmagicfingers",
       iconClassName: "fa fa-github"
     },
     {
       label: "Twitter",
-      url: "https://twitter.com/Vagr9K",
+      url: "https://twitter.com/PofMagicfingers",
       iconClassName: "fa fa-twitter"
     },
     {
       label: "Email",
-      url: "mailto:vagr9k@gmail.com",
+      url: "mailto:pof@podshows.fr",
       iconClassName: "fa fa-envelope"
     }
   ],
-  copyright: "Copyright © 2017. Advanced User", // Copyright string for the footer of the website and RSS feed.
-  themeColor: "#c62828", // Used for setting manifest and progress theme colors.
-  backgroundColor: "#e0e0e0" // Used for setting manifest background color.
+  copyright: `Copyright © ${new Date().getFullYear()} PofMagicfingers`, // Copyright string for the footer of the website and RSS feed.
+  themeColor: "#d83e3e", // Used for setting manifest and progress theme colors.
+  backgroundColor: "#151515" // Used for setting manifest background color.
 };

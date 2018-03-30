@@ -1,0 +1,27 @@
+{
+  "name": "gatsby-source-youtube",
+  "version": "0.0.1",
+  "description":
+    "Gatsby source plugin for building websites using Youtube videos as a data source",
+  "scripts": {
+    "build": "babel src --out-dir .",
+    "watch": "babel -w src --out-dir .",
+    "lint": "eslint src/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pofmagicfingers/pofmagicfingers.git"
+  },
+  "keywords": ["gatsby", "gatsby-plugin", "gatsby-source-plugin"],
+  "author": "Pof Magicfingers <pof@podshows.fr>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "eslint": "^3.19.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-import": "^2.7.0"
+  },
+  "dependencies": {
+    "rss-parser": "^2.10.1"
+  }
+}
