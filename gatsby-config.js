@@ -32,7 +32,8 @@ module.exports = {
       options: {
         channelId: config.youtubeChannelId,
         nodeMediaType: "text/markdown",
-        nodeTemplate: entry => `
+        nodeTemplate: entry =>
+          `
 ---
 title: "${entry.title}"
 cover: "${_.get(entry, "media:group.media:thumbnail[0].$.url", "")}"
