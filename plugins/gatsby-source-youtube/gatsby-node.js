@@ -1,5 +1,11 @@
-const parser = require("rss-parser");
+const Parser = require("rss-parser");
 const crypto = require("crypto");
+const parser = new Parser({
+  customFields: {
+    feed: ['yt:channelId'],
+    item: ['yt:videoId','yt:channelId', 'media:group'],
+  }
+});
 
 const createContentDigest = obj =>
   crypto
@@ -7,50 +13,51 @@ const createContentDigest = obj =>
     .update(JSON.stringify(obj))
     .digest("hex");
 
-function promisifiedParseURL(url) {
-  return new Promise((resolve, reject) => {
-    parser.parseURL(url, (err, data) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(data.feed);
-    });
-  });
-}
+const createChildren = ({ boundActionCreators }, { channelId, entry, nodeMediaType = defaultMediaType, nodeTemplate = defaultTemplate }) => {
+  const { createNode } = boundActionCreators;
 
-const createChildren = (entries, parentId, createNode) => {
-  const childIds = [];
-  entries.forEach(entry => {
-    childIds.push(entry.link);
-    const node = Object.assign({}, entry, {
-      id: entry.link,
-      title: entry.title,
-      link: entry.link,
-      description: entry.description,
-      parent: parentId,
-      children: []
-    });
-    node.internal = {
-      type: "rssFeedItem",
-      contentDigest: createContentDigest(node)
-    };
-    createNode(node);
+  const getMediaType = typeof nodeMediaType === "function" ? nodeMediaType : () => nodeMediaType;
+  const getContent = typeof nodeTemplate === "function" ? nodeTemplate : () => nodeTemplate;
+
+  createNode({
+    rssEntry: entry,
+    id: entry.link,
+    title: entry.title,
+    link: entry.link,
+    description: entry.description,
+    parent: channelId,
+    children: [],
+    internal: {
+      type: "YouTubeVideo",
+      mediaType: getMediaType(entry),
+      content: getContent(entry),
+      contentDigest: createContentDigest(entry)
+    }
   });
-  return childIds;
+
+  return entry.link;
 };
 
-async function sourceNodes({ boundActionCreators }, { channelId }) {
+const defaultMediaType = (entry) => "text/html";
+const defaultTemplate = (entry) => `<iframe width="560" height="315" src="https://www.youtube.com/embed/${entry["yt:videoId"]}?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+
+async function sourceNodes({ boundActionCreators }, { channelId, nodeMediaType = defaultMediaType, nodeTemplate = defaultTemplate }) {
   const { createNode } = boundActionCreators;
-  const data = await promisifiedParseURL(
+  
+  const data = await parser.parseURL(
     `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`
   );
+
   if (!data) {
     return;
   }
-  const { title, description, link, entries } = data;
-  const childrenIds = createChildren(entries, link, createNode);
+
+  const { title, description, link, items } = data;
+  
+  const childrenIds = items.map((entry) => createChildren({ boundActionCreators }, { entry, channelId, nodeMediaType, nodeTemplate })); 
+  
   const feedStory = {
-    id: link,
+    id: channelId,
     title,
     description,
     link,
@@ -59,7 +66,7 @@ async function sourceNodes({ boundActionCreators }, { channelId }) {
   };
 
   feedStory.internal = {
-    type: "rssFeed",
+    type: "YouTubeChannel",
     contentDigest: createContentDigest(feedStory)
   };
 

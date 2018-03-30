@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const config = require("./data/SiteConfig");
 
 const pathPrefix = config.pathPrefix === "/" ? "" : config.pathPrefix;
@@ -29,7 +30,22 @@ module.exports = {
     {
       resolve: "gatsby-source-youtube",
       options: {
-        channelId: config.youtubeChannelId
+        channelId: config.youtubeChannelId,
+        nodeMediaType: "text/markdown",
+        nodeTemplate: entry => `
+---
+title: "${entry.title}"
+cover: "${_.get(entry, "media:group.media:thumbnail[0].$.url", "")}"
+date: "${entry.pubDate}"
+category: "youtube"
+tags:
+    - video
+    - youtube
+---
+\`youtube: ${entry["yt:videoId"]}\`
+
+${_.get(entry, "media:group.media:description[0]")}
+`.trim()
       }
     },
     {
@@ -47,7 +63,16 @@ module.exports = {
           },
           "gatsby-remark-prismjs",
           "gatsby-remark-copy-linked-files",
-          "gatsby-remark-autolink-headers"
+          "gatsby-remark-autolink-headers",
+          {
+            resolve: "gatsby-remark-embed-video",
+            options: {
+              width: 800,
+              ratio: 1.77, // Optional: Defaults to 16/9 = 1.77
+              height: 400, // Optional: Overrides optional.ratio
+              related: false //Optional: Will remove related videos from the end of an embedded YouTube video.
+            }
+          }
         ]
       }
     },
