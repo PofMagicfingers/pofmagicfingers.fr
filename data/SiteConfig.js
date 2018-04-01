@@ -1,7 +1,10 @@
+const process = require("process");
+
 module.exports = {
   blogPostDir: "blog", // The name of directory that contains your posts.
   youtubeUsername: "PofMagicfingers",
   youtubeChannelId: "UCJpXhQlrx8c1ObNYd5KIZRg",
+  youtubeApiKey: process.env.YOUTUBE_API_KEY,
   siteTitle: "Pof Magicfingers", // Site title.
   siteTitleAlt: "Le bordel de Pof Magicfingers", // Alternative site title for SEO.
   siteLogo: "/logos/logo-1024.png", // Logo used for SEO and manifest.

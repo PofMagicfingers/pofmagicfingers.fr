@@ -31,21 +31,22 @@ module.exports = {
       resolve: "gatsby-source-youtube",
       options: {
         channelId: config.youtubeChannelId,
+        YouTubeAPIKey: config.youtubeApiKey,
         nodeMediaType: "text/markdown",
-        nodeTemplate: entry =>
+        nodeTemplate: node =>
           `
 ---
-title: "${entry.title}"
-cover: "${_.get(entry, "media:group.media:thumbnail[0].$.url", "")}"
-date: "${entry.pubDate}"
+title: "${node.title}"
+cover: "${node.thumbnail}"
+date: "${new Date(Date.parse(node.publishedAt)).toISOString()}"
 category: "youtube"
 tags:
     - video
     - youtube
 ---
-\`youtube: ${entry["yt:videoId"]}\`
+\`youtube: ${node.id}\`
 
-${_.get(entry, "media:group.media:description[0]")}
+${node.description}
 `.trim()
       }
     },

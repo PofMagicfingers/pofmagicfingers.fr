@@ -1,100 +1,150 @@
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 const Parser = require("rss-parser");
 const crypto = require("crypto");
-const parser = new Parser({
-  customFields: {
-    feed: ["yt:channelId"],
-    item: ["yt:videoId", "yt:channelId", "media:group"]
-  }
-});
+const YouTube = require("youtube-api");
+var chunk = require("lodash.chunk");
+var get = require("lodash.get");
 
-const createContentDigest = obj =>
-  crypto
-    .createHash("md5")
-    .update(JSON.stringify(obj))
-    .digest("hex");
+const empty = o => !o || typeof o !== "string" || o.trim().length;
 
-const createChildren = (
-  { boundActionCreators },
-  {
-    channelId,
-    entry,
-    nodeMediaType = defaultMediaType,
-    nodeTemplate = defaultTemplate
-  }
-) => {
+const createContentDigest = obj => crypto.createHash("md5").update(JSON.stringify(obj)).digest("hex");
+
+const createChildren = ({ boundActionCreators }, {
+  parentId,
+  childNode,
+  nodeMediaType = defaultMediaType,
+  nodeTemplate = defaultTemplate
+}) => {
   const { createNode } = boundActionCreators;
 
-  const getMediaType =
-    typeof nodeMediaType === "function" ? nodeMediaType : () => nodeMediaType;
-  const getContent =
-    typeof nodeTemplate === "function" ? nodeTemplate : () => nodeTemplate;
+  const getMediaType = typeof nodeMediaType === "function" ? nodeMediaType : () => nodeMediaType;
+  const getContent = typeof nodeTemplate === "function" ? nodeTemplate : () => nodeTemplate;
 
-  createNode({
-    id: entry.link,
-    title: entry.title,
-    link: entry.link,
-    description: entry.description,
-    parent: channelId,
+  createNode(_extends({}, childNode, {
+    parent: parentId,
     children: [],
     internal: {
       type: "YouTubeVideo",
-      mediaType: getMediaType(entry),
-      content: getContent(entry),
-      contentDigest: createContentDigest(entry)
+      mediaType: getMediaType(childNode),
+      content: getContent(childNode),
+      contentDigest: createContentDigest(childNode)
     }
-  });
+  }));
 
-  return entry.link;
+  return childNode.id;
 };
 
 const defaultMediaType = entry => "text/html";
-const defaultTemplate = entry =>
-  `<iframe width="560" height="315" src="https://www.youtube.com/embed/${
-    entry["yt:videoId"]
-  }?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+const defaultTemplate = entry => `<iframe width="560" height="315" src="https://www.youtube.com/embed/${entry["yt:videoId"]}?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
 
-async function sourceNodes(
-  { boundActionCreators },
-  {
-    channelId,
-    nodeMediaType = defaultMediaType,
-    nodeTemplate = defaultTemplate
-  }
-) {
+async function sourceNodes({ boundActionCreators }, {
+  channelId,
+  YouTubeAPIKey,
+  nodeMediaType = defaultMediaType,
+  nodeTemplate = defaultTemplate
+}) {
   const { createNode } = boundActionCreators;
 
-  const data = await parser.parseURL(
-    `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`
-  );
+  YouTube.authenticate({
+    type: "key",
+    key: YouTubeAPIKey
+  });
 
-  if (!data) {
-    return;
+  const channel = await getYouTubeChannel(channelId);
+
+  const channelNode = {
+    id: channel.id,
+    title: channel.title,
+    description: channel.description,
+    link: channel.link,
+    createdAt: new Date(Date.parse(channel.publishedAt)),
+    parent: null
+  };
+
+  channelNode.children = channel.videos.map(video => createChildren({ boundActionCreators }, {
+    childNode: {
+      id: video.id,
+      title: video.snippet.title,
+      description: video.snippet.description,
+      thumbnail: get(video, "snippet.thumbnails.maxres.url"),
+      tags: video.snippet.tags,
+      publishedAt: new Date(Date.parse(video.snippet.publishedAt)),
+      link: `https://youtube.com/watch?v=${video.id}`
+    },
+    parentId: channelId,
+    nodeMediaType,
+    nodeTemplate
+  }));
+
+  channelNode.internal = {
+    type: "YouTubeChannel",
+    contentDigest: createContentDigest(channelNode)
+  };
+
+  createNode(channelNode);
+}
+
+const promisify = fn => options => new Promise((res, rej) => {
+  fn(options, (err, data) => {
+    err && rej(err) || res(data);
+  });
+});
+
+const YouTubeSearch = promisify(YouTube.search.list);
+
+const YouTubeVideo = promisify(YouTube.videos.list);
+
+const YouTubeChannel = promisify(YouTube.channels.list);
+
+async function getYouTubeChannel(channelId) {
+  const channelInfos = (await YouTubeChannel({
+    part: "snippet",
+    id: channelId,
+    fields: "items(id,snippet(customUrl,description,publishedAt,thumbnails/maxres/url,title))"
+  })).items[0];
+
+  return {
+    id: channelId,
+    title: get(channelInfos, "snippet.title"),
+    description: get(channelInfos, "snippet.title"),
+    publishedAt: get(channelInfos, "snippet.publishedAt"),
+    thumbnail: get(channelInfos, "snippet.thumbnails.maxres.url"),
+    link: `https://youtube.com/channel/${channelId}`,
+    videos: await getYouTubeVideos(channelId)
+  };
+}
+
+async function getYouTubeVideos(channelId) {
+  let nextPageToken = undefined;
+
+  const results = [];
+
+  while (true) {
+    const query = await YouTubeSearch({
+      part: "id",
+      channelId: channelId,
+      maxResults: 50,
+      pageToken: nextPageToken,
+      order: "date",
+      type: "video",
+      fields: "items(id(kind,videoId))"
+    });
+
+    results.push(...query.items.filter(a => a && a.id && a.id.kind === "youtube#video").map(a => a.id.videoId));
+
+    nextPageToken = query.nextPageToken;
+
+    if (!nextPageToken) break;
   }
 
-  const { title, description, link, items } = data;
-
-  const childrenIds = items.map(entry =>
-    createChildren(
-      { boundActionCreators },
-      { entry, channelId, nodeMediaType, nodeTemplate }
-    )
-  );
-
-  const feedStory = {
-    id: channelId,
-    title,
-    description,
-    link,
-    parent: null,
-    children: childrenIds
-  };
-
-  feedStory.internal = {
-    type: "YouTubeChannel",
-    contentDigest: createContentDigest(feedStory)
-  };
-
-  createNode(feedStory);
+  return [].concat(...(await Promise.all(chunk(results).map(ids => {
+    return YouTubeVideo({
+      part: "snippet",
+      id: ids,
+      fields: "items(id,snippet(description,publishedAt,tags,thumbnails/maxres/url,title))"
+    });
+  }))).map(v => v && v.items || []));
 }
 
 exports.sourceNodes = sourceNodes;
