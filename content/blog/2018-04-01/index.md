@@ -1,8 +1,9 @@
 ---
 title: "Ouverture du blog"
 cover: ""
-date: "01/04/2017"
-category: "blog"
+date: "2018-04-01T00:00:00.000Z"
+category: "Blog"
+draft: true
 tags:
     - stuff
 ---

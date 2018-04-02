@@ -19,6 +19,12 @@ module.exports = {
   },
   plugins: [
     "gatsby-plugin-sass",
+    {
+      resolve: `gatsby-plugin-google-fonts`,
+      options: {
+        fonts: [`roboto`]
+      }
+    },
     "gatsby-plugin-react-helmet",
     {
       resolve: "gatsby-source-filesystem",
@@ -29,26 +35,7 @@ module.exports = {
     },
     {
       resolve: "gatsby-source-youtube",
-      options: {
-        channelId: config.youtubeChannelId,
-        YouTubeAPIKey: config.youtubeApiKey,
-        nodeMediaType: "text/markdown",
-        nodeTemplate: node =>
-          `
----
-title: "${node.title}"
-cover: "${node.thumbnail}"
-date: "${new Date(Date.parse(node.publishedAt)).toISOString()}"
-category: "youtube"
-tags:
-    - video
-    - youtube
----
-\`youtube: ${node.id}\`
-
-${node.description}
-`.trim()
-      }
+      options: config.youtube
     },
     {
       resolve: "gatsby-transformer-remark",
@@ -61,20 +48,18 @@ ${node.description}
             }
           },
           {
+            resolve: "gatsby-remark-embed-video",
+            options: {
+              width: 800,
+              related: false
+            }
+          },
+          {
             resolve: "gatsby-remark-responsive-iframe"
           },
           "gatsby-remark-prismjs",
           "gatsby-remark-copy-linked-files",
-          "gatsby-remark-autolink-headers",
-          {
-            resolve: "gatsby-remark-embed-video",
-            options: {
-              width: 800,
-              ratio: 1.77, // Optional: Defaults to 16/9 = 1.77
-              height: 400, // Optional: Overrides optional.ratio
-              related: false //Optional: Will remove related videos from the end of an embedded YouTube video.
-            }
-          }
+          "gatsby-remark-autolink-headers"
         ]
       }
     },

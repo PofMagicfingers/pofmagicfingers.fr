@@ -1,13 +1,14 @@
 const process = require("process");
 
+const youtube = require("./youtube");
+
 module.exports = {
   blogPostDir: "blog", // The name of directory that contains your posts.
-  youtubeUsername: "PofMagicfingers",
-  youtubeChannelId: "UCJpXhQlrx8c1ObNYd5KIZRg",
-  youtubeApiKey: process.env.YOUTUBE_API_KEY,
+  youtube,
   siteTitle: "Pof Magicfingers", // Site title.
   siteTitleAlt: "Le bordel de Pof Magicfingers", // Alternative site title for SEO.
   siteLogo: "/logos/logo-1024.png", // Logo used for SEO and manifest.
+  siteMascot: "/logos/pofmagicfingers.png", // Mascot.
   siteUrl: "https://pofmagicfingers.fr", // Domain of your website without pathPrefix.
   pathPrefix: "/", // Prefixes all links. For cases when deployed to example.github.io/gatsby-advanced-starter/.
   siteDescription: "Le bordel de Pof Magicfingers", // Website description used for RSS feeds/meta description tag.

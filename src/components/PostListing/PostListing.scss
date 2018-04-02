@@ -1,0 +1,51 @@
+.post-listing {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  align-items: flex-start;
+
+  .post-box {
+    border: 1px solid black;
+    background: #222;
+    padding: 15px;
+    box-shadow: 0px 0px 5px 2px rgba(31, 31, 31, 1);
+    margin: 10px;
+    max-width: 320px;
+
+    order: 0;
+    flex: 0 1 auto;
+    align-self: stretch;
+
+    display: flex;
+    flex-direction: column;
+
+    .post-header {
+      flex-grow: 1;
+      .cover {
+        max-width: 100%;
+        box-shadow: 0px 0px 5px 2px rgba(168, 168, 168, 0.1);
+      }
+
+      .title {
+        margin: 5px 0;
+      }
+    }
+
+    .post-footer {
+      height: 20px;
+      line-height: 20px;
+      padding-top: 5px;
+      .time {
+        text-align: right;
+        margin: 0;
+      }
+
+      .category {
+        float: left;
+        margin: 0;
+      }
+    }
+  }
+}

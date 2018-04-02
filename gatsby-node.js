@@ -124,6 +124,12 @@ exports.createPages = ({ graphql, boundActionCreators }) => {
 };
 
 exports.modifyWebpackConfig = ({ config, stage }) => {
+  config.merge({
+    node: {
+      fs: "empty"
+    }
+  });
+
   if (stage === "build-javascript") {
     config.plugin("Lodash", webpackLodashPlugin, null);
   }

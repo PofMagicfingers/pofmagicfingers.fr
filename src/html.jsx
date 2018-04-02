@@ -2,7 +2,15 @@
 /* eslint import/extensions:"off" */
 /* eslint global-require:"off" */
 import React from "react";
-import favicon from "./favicon.png";
+
+import moment from "moment/min/moment-with-locales";
+import Moment from "react-moment";
+import "moment/locale/fr";
+
+Moment.globalMoment = moment;
+Moment.globalLocale = "fr";
+
+import * as favicons from "../static/logos/favicons";
 
 let inlinedStyles = "";
 if (process.env.NODE_ENV === "production") {
@@ -26,6 +34,30 @@ export default class HTML extends React.Component {
         />
       );
     }
+
+    favicons = [
+      <link
+        rel="apple-touch-icon"
+        sizes="180x180"
+        href={favicons.appleTouchIcon}
+      />,
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="32x32"
+        href={favicons.favicon32}
+      />,
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="16x16"
+        href={favicons.favicon16}
+      />,
+      <link rel="mask-icon" href={favicons.maskIcon} color="#404040" />,
+      <meta name="msapplication-TileColor" content="#000000" />,
+      <meta name="msapplication-TileImage" content={favicons.mstile} />
+    ];
+
     return (
       <html lang="en">
         <head>
@@ -35,7 +67,7 @@ export default class HTML extends React.Component {
             content="width=device-width, initial-scale=1.0"
           />
           {this.props.headComponents}
-          <link rel="shortcut icon" href={favicon} />
+          {favicons}
           {css}
         </head>
         <body>
