@@ -51,9 +51,9 @@ class PostListing extends React.Component {
       <div className="post-listing">
         {/* Your post list here. */
         postList.map(post => (
-          <article class="post-box">
+          <article className="post-box" key={post.title}>
             <header className="post-header">
-              <Link to={post.path} key={post.title}>
+              <Link to={post.path}>
                 {post.cover ? <img src={post.cover} className="cover" /> : null}
                 <h3 className="title">{post.title}</h3>
               </Link>
