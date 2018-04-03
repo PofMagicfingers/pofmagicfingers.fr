@@ -16,6 +16,7 @@ class PostListing extends React.Component {
         cover: postEdge.node.frontmatter.cover,
         title: postEdge.node.frontmatter.title,
         date: postEdge.node.frontmatter.date,
+        customTimeToRead: postEdge.node.frontmatter.timeToRead,
         excerpt: postEdge.node.excerpt,
         timeToRead: postEdge.node.timeToRead,
         category: postEdge.node.frontmatter.category,
@@ -27,8 +28,23 @@ class PostListing extends React.Component {
   render() {
     const postList = this.getPostList();
 
+    const TimeToRead = ({ post }) => {
+      const ttr = post.customTimeToRead || post.timeToRead;
+      const hours = Math.floor(ttr / 60);
+      const minutes = ttr - hours * 60;
+
+      return minutes ? (
+        <h5 className="timeToRead">
+          <FontAwesome name="clock-o" />&nbsp;
+          {hours
+            ? `${hours} h ${`00${minutes}`.slice(-2)} min`
+            : `${minutes} min`}
+        </h5>
+      ) : null;
+    };
+
     const PublishedAt = ({ post }) => (
-      <h5 className="time">
+      <h5 className="publishedAt">
         <Moment fromNow>{post.date}</Moment>
       </h5>
     );
@@ -42,6 +58,7 @@ class PostListing extends React.Component {
 
     const PostFooter = ({ post }) => (
       <footer className="post-footer">
+        <TimeToRead post={post} />
         <Category post={post} />
         <PublishedAt post={post} />
       </footer>

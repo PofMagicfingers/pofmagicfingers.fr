@@ -23,6 +23,7 @@ const templateEngine = (node, parentId) => {
     category: "YouTube",
     date: node.publishedAt,
     source: channels[parentId],
+    timeToRead: Math.round(node.duration / 60),
     tags
   };
 

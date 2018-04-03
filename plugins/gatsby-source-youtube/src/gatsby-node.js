@@ -6,7 +6,7 @@ var get = require("lodash.get");
 
 /* Utils */
 
-const empty = o => !o || typeof o !== "string" || o.trim().length;
+const empty = o => !o || typeof o !== "string" || !o.trim().length;
 
 const createContentDigest = obj =>
   crypto
@@ -53,6 +53,24 @@ async function getYouTubeChannel(channelId) {
   };
 }
 
+const YTDurationToSeconds = duration => {
+  if (empty(duration)) return 0;
+
+  var match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+
+  match = match.slice(1).map(function(x) {
+    if (x != null) {
+      return x.replace(/\D/, "");
+    }
+  });
+
+  var hours = parseInt(match[0]) || 0;
+  var minutes = parseInt(match[1]) || 0;
+  var seconds = parseInt(match[2]) || 0;
+
+  return hours * 3600 + minutes * 60 + seconds;
+};
+
 async function getYouTubeVideos(channelId) {
   let nextPageToken = undefined;
 
@@ -84,10 +102,10 @@ async function getYouTubeVideos(channelId) {
     ...(await Promise.all(
       chunk(results).map(ids => {
         return YouTubeVideo({
-          part: "snippet",
+          part: "snippet,contentDetails",
           id: ids,
           fields:
-            "items(id,snippet(description,publishedAt,tags,thumbnails(default/url,high/url,maxres/url,medium/url,standard/url),title))"
+            "items(id,snippet(description,publishedAt,tags,thumbnails(default/url,high/url,maxres/url,medium/url,standard/url),title),contentDetails(duration))"
         });
       })
     )).map(v => (v && v.items) || [])
@@ -176,6 +194,9 @@ exports.sourceNodes = async (
             title: video.snippet.title,
             description: video.snippet.description,
             thumbnail: getThumbnail(get(video, "snippet.thumbnails")),
+            duration: YTDurationToSeconds(
+              get(video, "contentDetails.duration")
+            ),
             tags: video.snippet.tags,
             publishedAt: new Date(Date.parse(video.snippet.publishedAt)),
             link: `https://youtube.com/watch?v=${video.id}`
