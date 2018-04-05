@@ -6,6 +6,8 @@ const YouTube = require("youtube-api");
 var chunk = require("lodash.chunk");
 var get = require("lodash.get");
 
+const { createRemoteFileNode } = require(`gatsby-source-filesystem`);
+
 /* Utils */
 
 const empty = o => !o || typeof o !== "string" || !o.trim().length;
@@ -16,7 +18,7 @@ const createContentDigest = obj => crypto.createHash("md5").update(JSON.stringif
 
 const promisify = fn => options => new Promise((res, rej) => {
   fn(options, (err, data) => {
-    err && rej(err) || res(data);
+    err && rej(err) && console.log(err) || res(data);
   });
 });
 
@@ -40,7 +42,7 @@ async function getYouTubeChannel(channelId) {
     title: get(channelInfos, "snippet.title"),
     description: get(channelInfos, "snippet.title"),
     publishedAt: get(channelInfos, "snippet.publishedAt"),
-    thumbnail: getThumbnail(get(channelInfos, "snippet.thumbnails")),
+    thumbnailUrl: getThumbnail(get(channelInfos, "snippet.thumbnails")),
     link: `https://youtube.com/channel/${channelId}`,
     videos: await getYouTubeVideos(channelId)
   };
@@ -98,10 +100,34 @@ async function getYouTubeVideos(channelId) {
 
 /* Node creations */
 
+const createThumbnailNode = async (node, store, cache, createNode) => {
+  if (node && !empty(node.thumbnailUrl)) {
+    let fileNode;
+    try {
+      console.log("Downloading " + node.thumbnailUrl);
+      fileNode = await createRemoteFileNode({
+        url: node.thumbnailUrl,
+        store,
+        cache,
+        createNode,
+        auth: _auth
+      });
+    } catch (e) {
+      // Ignore
+    }
+
+    if (fileNode) {
+      node.thumbnailFile__NODE = fileNode.id;
+    }
+  }
+
+  return node;
+};
+
 const defaultMediaType = entry => "text/html";
 const defaultTemplate = entry => `<iframe width="560" height="315" src="https://www.youtube.com/embed/${entry["yt:videoId"]}?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
 
-const createChildren = ({ boundActionCreators }, {
+const createChildren = async ({ boundActionCreators, store, cache }, {
   parentId,
   childNode,
   nodeMediaType = defaultMediaType,
@@ -112,7 +138,7 @@ const createChildren = ({ boundActionCreators }, {
   const getMediaType = typeof nodeMediaType === "function" ? nodeMediaType : () => nodeMediaType;
   const getContent = typeof nodeTemplate === "function" ? nodeTemplate : () => nodeTemplate;
 
-  createNode(_extends({}, childNode, {
+  const nodeData = _extends({}, childNode, {
     parent: parentId,
     children: [],
     internal: {
@@ -121,12 +147,18 @@ const createChildren = ({ boundActionCreators }, {
       content: getContent(childNode, parentId),
       contentDigest: createContentDigest(childNode)
     }
-  }));
+  });
+
+  console.log(`Creating video thumbnail node for ${nodeData.id}`);
+  await createThumbnailNode(nodeData, store, cache, createNode);
+
+  console.log(`Creating video node for ${nodeData.id}`);
+  createNode(nodeData);
 
   return childNode.id;
 };
 
-exports.sourceNodes = async ({ boundActionCreators }, {
+exports.sourceNodes = async ({ boundActionCreators, store, cache }, {
   channelId,
   channelIds,
   YouTubeAPIKey,
@@ -153,31 +185,41 @@ exports.sourceNodes = async ({ boundActionCreators }, {
       title: channel.title,
       description: channel.description,
       link: channel.link,
+      thumbnailUrl: channel.thumbnailUrl,
       createdAt: new Date(Date.parse(channel.publishedAt)),
       parent: null
     };
 
-    channelNode.children = channel.videos.map(video => createChildren({ boundActionCreators }, {
-      childNode: {
-        id: video.id,
-        title: video.snippet.title,
-        description: video.snippet.description,
-        thumbnail: getThumbnail(get(video, "snippet.thumbnails")),
-        duration: YTDurationToSeconds(get(video, "contentDetails.duration")),
-        tags: video.snippet.tags,
-        publishedAt: new Date(Date.parse(video.snippet.publishedAt)),
-        link: `https://youtube.com/watch?v=${video.id}`
-      },
-      parentId: channelId,
-      nodeMediaType,
-      nodeTemplate
-    }));
+    console.log(`Creating channel thumbnail node for node ${channelNode.id}`);
+    await createThumbnailNode(channelNode, store, cache, createNode);
+
+    channelNode.children = [];
+
+    for (let index = 0; index < channel.videos.length; index++) {
+      const video = channel.videos[index];
+      channelNode.children.push((await createChildren({ boundActionCreators, store, cache }, {
+        childNode: {
+          id: video.id,
+          title: video.snippet.title,
+          description: video.snippet.description,
+          thumbnailUrl: getThumbnail(get(video, "snippet.thumbnails")),
+          duration: YTDurationToSeconds(get(video, "contentDetails.duration")),
+          tags: video.snippet.tags,
+          publishedAt: new Date(Date.parse(video.snippet.publishedAt)),
+          link: `https://youtube.com/watch?v=${video.id}`
+        },
+        parentId: channelId,
+        nodeMediaType,
+        nodeTemplate
+      })));
+    }
 
     channelNode.internal = {
       type: "YouTubeChannel",
       contentDigest: createContentDigest(channelNode)
     };
 
+    console.log(`Creating channel node ${channelNode.id}`);
     createNode(channelNode);
   };
 
