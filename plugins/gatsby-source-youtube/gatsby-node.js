@@ -100,7 +100,13 @@ async function getYouTubeVideos(channelId) {
 
 /* Node creations */
 
-const createThumbnailNode = async (node, store, cache, createNode) => {
+const createThumbnailNode = async ({
+  node,
+  store,
+  cache,
+  createNode,
+  createParentChildLink
+}) => {
   if (node && !empty(node.thumbnailUrl)) {
     let fileNode;
     try {
@@ -109,15 +115,19 @@ const createThumbnailNode = async (node, store, cache, createNode) => {
         url: node.thumbnailUrl,
         store,
         cache,
-        createNode,
-        auth: _auth
+        createNode
       });
     } catch (e) {
-      // Ignore
+      console.error("error");
+      console.error(e);
     }
 
     if (fileNode) {
-      node.thumbnailFile__NODE = fileNode.id;
+      console.log("Created fileNode ", fileNode.id);
+      createParentChildLink({
+        parent: node,
+        child: fileNode
+      });
     }
   }
 
@@ -133,7 +143,7 @@ const createChildren = async ({ boundActionCreators, store, cache }, {
   nodeMediaType = defaultMediaType,
   nodeTemplate = defaultTemplate
 }) => {
-  const { createNode } = boundActionCreators;
+  const { createNode, createParentChildLink } = boundActionCreators;
 
   const getMediaType = typeof nodeMediaType === "function" ? nodeMediaType : () => nodeMediaType;
   const getContent = typeof nodeTemplate === "function" ? nodeTemplate : () => nodeTemplate;
@@ -149,11 +159,17 @@ const createChildren = async ({ boundActionCreators, store, cache }, {
     }
   });
 
-  console.log(`Creating video thumbnail node for ${nodeData.id}`);
-  await createThumbnailNode(nodeData, store, cache, createNode);
-
   console.log(`Creating video node for ${nodeData.id}`);
   createNode(nodeData);
+
+  console.log(`Creating video thumbnail node for ${nodeData.id}`);
+  await createThumbnailNode({
+    node: nodeData,
+    store,
+    cache,
+    createNode,
+    createParentChildLink
+  });
 
   return childNode.id;
 };
@@ -165,7 +181,7 @@ exports.sourceNodes = async ({ boundActionCreators, store, cache }, {
   nodeMediaType = defaultMediaType,
   nodeTemplate = defaultTemplate
 }) => {
-  const { createNode } = boundActionCreators;
+  const { createNode, createParentChildLink } = boundActionCreators;
 
   const channels = [];
 
@@ -189,9 +205,6 @@ exports.sourceNodes = async ({ boundActionCreators, store, cache }, {
       createdAt: new Date(Date.parse(channel.publishedAt)),
       parent: null
     };
-
-    console.log(`Creating channel thumbnail node for node ${channelNode.id}`);
-    await createThumbnailNode(channelNode, store, cache, createNode);
 
     channelNode.children = [];
 
@@ -221,6 +234,14 @@ exports.sourceNodes = async ({ boundActionCreators, store, cache }, {
 
     console.log(`Creating channel node ${channelNode.id}`);
     createNode(channelNode);
+    console.log(`Creating channel thumbnail node for node ${channelNode.id}`);
+    await createThumbnailNode({
+      node: channelNode,
+      store,
+      cache,
+      createNode,
+      createParentChildLink
+    });
   };
 
   return await Promise.all(channels.map(channel => createAllNodes(channel)));
