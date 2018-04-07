@@ -45,18 +45,32 @@ export default class PostTemplate extends React.Component {
 export const pageQuery = graphql`
   query BlogPostBySlug($slug: String!) {
     markdownRemark(fields: { slug: { eq: $slug } }) {
-      html
-      timeToRead
-      excerpt
-      frontmatter {
-        title
-        cover
-        date
-        category
-        tags
+      id
+      parent {
+        ... on YouTubeVideo {
+          thumbnailFile {
+            childImageSharp {
+              resolutions(width: 320, height: 180) {
+                ...GatsbyImageSharpResolutions_tracedSVG
+              }
+            }
+          }
+        }
       }
       fields {
         slug
+      }
+      html
+      excerpt
+      timeToRead
+      frontmatter {
+        title
+        tags
+        cover
+        date
+        source
+        category
+        timeToRead
       }
     }
   }
