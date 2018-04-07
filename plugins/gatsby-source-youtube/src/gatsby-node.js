@@ -140,10 +140,7 @@ const createThumbnailNode = async ({
 
     if (fileNode) {
       console.log("Created fileNode ", fileNode.id);
-      createParentChildLink({
-        parent: node,
-        child: fileNode
-      });
+      node.thumbnailFile___NODE = fileNode.id;
     }
   }
 
@@ -184,9 +181,6 @@ const createChildren = async (
     }
   };
 
-  console.log(`Creating video node for ${nodeData.id}`);
-  createNode(nodeData);
-
   console.log(`Creating video thumbnail node for ${nodeData.id}`);
   await createThumbnailNode({
     node: nodeData,
@@ -195,6 +189,9 @@ const createChildren = async (
     createNode,
     createParentChildLink
   });
+
+  console.log(`Creating video node for ${nodeData.id}`);
+  createNode(nodeData);
 
   return childNode.id;
 };
@@ -267,8 +264,6 @@ exports.sourceNodes = async (
       contentDigest: createContentDigest(channelNode)
     };
 
-    console.log(`Creating channel node ${channelNode.id}`);
-    createNode(channelNode);
     console.log(`Creating channel thumbnail node for node ${channelNode.id}`);
     await createThumbnailNode({
       node: channelNode,
@@ -277,6 +272,9 @@ exports.sourceNodes = async (
       createNode,
       createParentChildLink
     });
+
+    console.log(`Creating channel node ${channelNode.id}`);
+    createNode(channelNode);
   };
 
   return await Promise.all(channels.map(channel => createAllNodes(channel)));

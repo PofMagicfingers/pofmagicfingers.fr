@@ -18,6 +18,12 @@ module.exports = {
     }
   },
   plugins: [
+    "gatsby-transformer-sharp",
+    "gatsby-plugin-sharp",
+    {
+      resolve: "gatsby-source-youtube",
+      options: config.youtube
+    },
     "gatsby-plugin-sass",
     {
       resolve: `gatsby-plugin-google-fonts`,
@@ -32,10 +38,6 @@ module.exports = {
         name: "posts",
         path: `${__dirname}/content/${config.blogPostDir}`
       }
-    },
-    {
-      resolve: "gatsby-source-youtube",
-      options: config.youtube
     },
     {
       resolve: "gatsby-transformer-remark",
@@ -75,7 +77,6 @@ module.exports = {
         color: config.themeColor
       }
     },
-    "gatsby-plugin-sharp",
     "gatsby-plugin-catch-links",
     "gatsby-plugin-twitter",
     "gatsby-plugin-sitemap",

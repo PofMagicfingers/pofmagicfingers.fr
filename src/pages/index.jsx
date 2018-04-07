@@ -23,12 +23,24 @@ export default Index;
 export const pageQuery = graphql`
   query IndexQuery {
     allMarkdownRemark(
-      limit: 2000
+      limit: 5000
       sort: { fields: [frontmatter___date], order: DESC }
       filter: { frontmatter: { draft: { ne: true } } }
     ) {
       edges {
         node {
+          id
+          parent {
+            ... on YouTubeVideo {
+              thumbnailFile {
+                childImageSharp {
+                  resolutions(width: 320, height: 180) {
+                    ...GatsbyImageSharpResolutions_tracedSVG
+                  }
+                }
+              }
+            }
+          }
           fields {
             slug
           }
