@@ -1,6 +1,4 @@
 import React from "react";
-import { get } from "lodash";
-
 import PostBox from "./PostBox";
 
 import "./PostListing.scss";
@@ -11,16 +9,16 @@ class PostListing extends React.Component {
       const node = postEdge.node || {};
       const frontmatter = node.frontmatter || {};
 
-      const coverResolutions = get(
-        node,
-        "parent.thumbnailFile.childImageSharp.resolutions"
-      );
+      const coverResolutions =
+        node.parent &&
+        node.parent.thumbnailFile &&
+        node.parent.thumbnailFile.childImageSharp.resolutions;
 
       return {
         id: node.id,
         path: node.fields.slug,
         tags: frontmatter.tags,
-        coverResolutions: coverResolutions,
+        coverResolutions,
         cover: frontmatter.cover,
         title: frontmatter.title,
         date: frontmatter.date,
